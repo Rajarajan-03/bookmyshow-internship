@@ -5,6 +5,7 @@ from django.shortcuts import render,redirect
 from django.contrib.auth import login,authenticate
 from django.contrib.auth.decorators import login_required
 from movies.models import Movie , Booking
+from django.utils import timezone
 
 def home(request):
     movies= Movie.objects.all()
@@ -37,6 +38,11 @@ def login_view(request):
 @login_required
 def profile(request):
     bookings= Booking.objects.filter(user=request.user)
+    bookings = Booking.objects.filter(user=request.user).select_related('movie', 'theater', 'seat')
+    now = timezone.now()
+
+    upcoming = bookings.filter(theater__time__gte=now).order_by('theater__time')
+    past = bookings.filter(theater__time__lt=now).order_by('-theater__time')
     if request.method == 'POST':
         u_form = UserUpdateForm(request.POST, instance=request.user)
         if u_form.is_valid():
@@ -44,9 +50,11 @@ def profile(request):
             return redirect('profile')
     else:
         u_form = UserUpdateForm(instance=request.user)
-
-    return render(request, 'users/profile.html', {'u_form': u_form,'bookings':bookings})
-
+    return render(request, 'users/profile.html', {
+        'u_form': u_form,
+        'upcoming': upcoming,
+        'past': past
+    })
 @login_required
 def reset_password(request):
     if request.method == 'POST':
