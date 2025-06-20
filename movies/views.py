@@ -3,7 +3,7 @@ from .models import Movie,Theater,Seat,Booking,ShowTiming
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.utils import timezone
-
+from datetime import timedelta
 def movie_timing(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     show_timing = ShowTiming.objects.filter(movie=movie)
@@ -113,10 +113,7 @@ def book_seats(request,theater_id):
 
   
 
-    return render(request, 'movies/seat_selection.html', {
-        'theater': theaters,
-        "seats": seats
-    })
+    
 @login_required(login_url='/login/')
 def reservation_payment_page(request, seat_ids):
     seat_ids = seat_ids.split(',')
